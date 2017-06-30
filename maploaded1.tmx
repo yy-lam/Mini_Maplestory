@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0.0" orientation="orthogonal" renderorder="left-down" width="45" height="20" tilewidth="32" tileheight="32" nextobjectid="1">
+ <tileset firstgid="1" name="platform" tilewidth="32" tileheight="32" tilecount="855" columns="45">
+  <image source="Source/MapleMap1.png" width="1450" height="613"/>
+ </tileset>
+ <layer name="platform" width="45" height="20">
+  <data encoding="base64" compression="zlib">
+   eJzt1GdXjgEcx/HrvkmSLYTsLSSjiOzKpmFkZc+sijdoFskMZQsRiULZH2+gp3XOfX3P+Tz/P/ifXxCEhYWFdf8uRYLgMle4yjUqqYp09WVhsVr4k2FhsdvFSOcbcJ0bVHOTGm5xmzvc5R73qeUBD3lEHfU85glPecZzXvCSVzTwmje8pZF3vKeJD3ykmU+08JkvtNLGV77xnXY6+MFPfvGbP/z9v2vRIIgQpQc9iaMX8fQmgT4k0pd+9GcAAxnEYIaQxFCGMZxkRjCSUaQwmjGMZRzjmcBEJjGZKUxlGtOZQSozmcVs0phDOnOZx3wWkEEmC1lEFotZQjZLWcZyVrCSVawmh1zyWMNa1rGeDWxkE5vZQj4FFFLEVraxnR0Us5Nd7GYPeylhH/s5wEEOcZgjHOUYxznBSUo5xWnOcJZzlFFOBee5wD9FWF0m
+  </data>
+ </layer>
+ <layer name="bg" width="45" height="20">
+  <data encoding="base64" compression="zlib">
+   eJzt0UVvVFEYgOF2QZGiwX2PLXAP7nukC9zTAi1O0Rav4Q1aKO5QKNQF+Cu475GnCYveBBadWVwW9808izPJd843mYSEqKioqKbVjCSa04KWtCKZ1rShLe1oT4dw1gw0mCEMZRjDGcFIRjGaMYxlHOPDWTPQQhaxmCUsZRnLWcFKVrGaNawNZctgOeSSRz4FHOM4JzjJKU5zhsJw1gxURjkVVFJFNTXUUkc9L3jJq1C2DPaaN7zlHe/5wEc+8ZkvfOUb3+N46wc/+dVwSPRJjO2ejuY60ZkudKUb3elBT3rRmz70jfGdhvqZ7c8ABjIoxrsmmJvIJCYzhalMYzozmMksZjMnjp3nmp3HfBaQEuNdqebSWMd6NpBOBhvZxGa2sJVtbGcHmX/ebHzeyS52s4e97COLbPZzgIMc4jBHOEoOueSRT8E/ftNZ35/jPBe4yCWKuMwVirnKNa5zg5vc4vZfzne4yz3u84CHPOIxJTzhKaU84zlllFNBJVVUU0MtddTH8T9HRf2P/Qbdm2I+
+  </data>
+ </layer>
+</map>

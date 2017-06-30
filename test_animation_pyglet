@@ -1,0 +1,15 @@
+import pyglet
+
+move_left = []
+for i in range(8):
+    image = pyglet.image.AnimationFrame('Source/Boss1/walk_%d.png' %i, 0.2)
+    move_left.append(image)
+player = pyglet.sprite.Sprite(img=pyglet.image.Animation(move_left), x=50, y=50)
+
+window = pyglet.window.Window()
+
+@window.event
+def on_draw():
+    player.draw()
+
+pyglet.app.run()

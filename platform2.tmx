@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0.0" orientation="orthogonal" renderorder="left-down" width="30" height="20" tilewidth="32" tileheight="32" nextobjectid="1">
+ <tileset firstgid="1" name="tile" tilewidth="32" tileheight="32" tilecount="400" columns="20">
+  <image source="img/platformer-tiles.png" width="640" height="640"/>
+  <terraintypes>
+   <terrain name="New Terrain" tile="91"/>
+  </terraintypes>
+  <tile id="58" terrain=",,0,"/>
+  <tile id="78" terrain=",,0,"/>
+  <tile id="79" terrain=",,0,"/>
+  <tile id="91" terrain="0,0,0,0"/>
+  <tile id="92" terrain=",,,0"/>
+  <tile id="93" terrain=",0,,"/>
+  <tile id="94" terrain=",,0,"/>
+  <tile id="95" terrain="0,,,"/>
+  <tile id="96" terrain=",0,,"/>
+  <tile id="113" terrain=",,0,"/>
+  <tile id="115" terrain=",0,,"/>
+ </tileset>
+ <tileset firstgid="401" name="sky" tilewidth="32" tileheight="32" tilecount="9" columns="3">
+  <image source="img/sky.gif" width="96" height="96"/>
+ </tileset>
+ <layer name="sky" width="30" height="20">
+  <data encoding="base64" compression="zlib">
+   eJzt1LkKACEMBFD9/8ojHn+7U4oIEo/swqYYHAKxeIjOGuORgDhm9xu7ESEkMXoazIl5T0YKUoW7pO2uMzXnyi7XOXfzIuh8qq869+Y3nWe9/sT59nt+899QZ3VW5+84P+bwX0c=
+  </data>
+ </layer>
+ <layer name="map1" width="30" height="20">
+  <data encoding="base64" compression="zlib">
+   eJztzjdOA0EYhmFvSeYCZC5ApiXnjBPQkHEgNA6AwCY0hIZMQ2jIXIDMBchcgMwFyBS8iMIjayXkYjp/0qN/ZnZ3vtVo/PHHEy100MMAI2pQizqJvSaYYYEV7ehAJ7ok9vahHy64MYBBDGFYYu8EJjGFacxgFnOYl9i7glWsYR0b2MQWtiX27mAXe9jHAQ5xhGOJvSc4xRnOcYFLXOFaYu8NbnGHezzgEU94ltj7gle84R0f+MQXviX2BigaTSCCEIwQhCIM4YrnPRvscMCpsvc1EdwdiShEIwaxiEO80DuCUYxhXGXvaxK4OxFJSEYKUpGGdKF3AYtYwrLK/jcZyp9MZCFbmN7nOchFHvJRgEIUoRglKEUZylGBSlQJs1r4Py1rHfQwCNP73Ch8o5Z6njegEU1oRgtahdkm3GFibYYFVmF6n7f/02vjuR0OONGNHvQKUy0uzt2KZ8rKD38hWpg=
+  </data>
+ </layer>
+</map>
