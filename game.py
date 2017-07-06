@@ -1,72 +1,15 @@
-import cocos, pyglet, constants, random, math
+import cocos, pyglet, constants, random
 from cocos.layer import Layer, ScrollingManager, ScrollableLayer, ColorLayer
 from cocos.sprite import Sprite
-from cocos.actions import MoveTo, MoveBy, JumpBy, Delay
+from cocos.actions import *
 from cocos import mapcolliders
+from cocos.particle_systems import *
+from cocos.particle import *
 from pyglet.window import key
 from pyglet.window.key import symbol_string, KeyStateHandler
 from pyglet.gl import glClearColor
 
-
-class PlayerAction(cocos.actions.Action):
-
-    """docstring for PlayerAction"""
-    def __init__(self):
-        super(PlayerAction, self).__init__()
-        self.on_ground = True
-        self.move_speed = 300
-        self.jump_speed = 500
-        self.gravity = -800
-    def start(self):
-        self.target.velocity = (0,0)
-
-    def step(self, dt):
-        super(PlayerAction, self).step(dt)
-        vx, vy = self.target.velocity
-        vx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) * self.move_speed
-        
-        vy += self.gravity * dt
-        if self.on_ground and keyboard[key.S]:
-            vy =  self.jump_speed
-        # update velocity
-        dx = vx * dt
-        dy = vy * dt 
-        last_rect = self.target.rect
-        #last_rect = narrow(last_rect, 150)
-        # build the tentative displaced rect
-        new_rect = last_rect.copy()
-        new_rect.x += dx
-        new_rect.y += dy 
-
-
-        #print("vx:", vx, "vy:", vy, "dx:", dx, "dy:", dy, "last:", last_rect,"new", new_rect)
-        self.target.velocity = mapcollider.collide_map(platform, last_rect, 
-                                                       new_rect, vx, vy)
-        # account for hitting obstacles, which adjust new vx,vy
-        self.target.rect = new_rect
-        self.on_ground = (new_rect.y == last_rect.y)
-        # Update player's attack rect
-        if self.target.attacking:
-            if self.target.direction == 'right':
-                self.target.attack_rect = new_rect.copy()
-                self.target.attack_rect.set_width(380)
-            elif self.target.direction == 'left':
-                self.target.attack_rect = new_rect.copy()
-                self.target.attack_rect.x = new_rect.x -320
-        # if self.on_ground:
-        #     self.target.on_ground()
-        self.target.position = new_rect.center
-    
-        #self.target.anchor = new_rect.center
-        #print('position:', self.target.position, 'rect:', new_rect, 'anchor:', self.target.anchor)
-        scroller.set_focus(*new_rect.center)
-        # scroller.set_focus(self.target.x, self.target.y)    
-        # Adjust attack animation offsets 
-        # if keyboard[key.A]:
-        #     self.target.image_anchor = (200,160)
-        # else:
-        #     self.target.image_anchor = new_rect.center
-        
+       
 class Player(Sprite):
     is_event_handler = True
 
@@ -122,10 +65,12 @@ class Player(Sprite):
         self.move_speed = 300
         self.jump_speed = 500
         self.gravity = -800
+
+        # Player's attributes
+        self.hp = 200
+        self.strength = 50
         
-        self.one_time_trigger1 = True
-        self.one_time_trigger2 = True
-        self.one_time_trigger3 = True
+        
         # Attack Rect
         self.attack_rect = self.rect.copy()
         
@@ -192,65 +137,63 @@ class Player(Sprite):
         else:
             self.image = self.stand_right_anim
         self.attack_reset()
-Player.register_event_type('on_ground')
 
-# Moved to monster.update(dt)
-class MonsterAction(cocos.actions.Action):
-    """docstring for MonsterAction"""
-    def __init__(self):
-        super(MonsterAction, self).__init__()
-        self.on_ground = True
-        self.move_speed = 50
-        self.jump_speed = 500
-        self.gravity = -800
-        self.nextDecisionTime = 3
-        self.m = 0
-        self.M = 0
-    def step(self, dt):
-        self.nextDecisionTime -= dt
-        vx, vy = self.target.velocity
-        #print(self.nextDecisionTime)
-        # AI decision:
+    def walk_right(self):
+        self.direction = 'right'
+        self.attacking = False
+        self.attack_reset()
+        self.image = self.move_right_anim
+        self.image_anchor = (self.stand[0].image.width/2, 
+                             self.stand[0].image.height/2)
+    def walk_left(self):
+        self.direction = 'left'
+        self.attacking = False
+        self.attack_reset()
+        self.image = self.move_left_anim
+        self.image_anchor = (self.stand[0].image.width/2, 
+                             self.stand[0].image.height/2)
+
+    def jump(self):
+        self.attacking = False
+        if self.direction == 'left':
+            self.image = self.jump_left_anim
+        elif self.direction == 'right':
+            self.image = self.jump_right_anim
+
+    def attack(self):
+        if self.attacking == False:
+            self.attacking = True
+            if self.direction == 'left':
+                self.image = self.slash_left_anim
+                self.image_anchor = (400,156)
+            else:
+                self.image = self.slash_right_anim
+                self.image_anchor = (150,158)
+
+    def under_attack(self, diff):
+    if self.one_time_trigger1:
+        self.attacked = True
+        hurt = int(diff*random.uniform(0.75,1.2))
+        self.hp -= hurt
+        # if self.hp <= 0:
+        #     if self.direction == 'left':
+        #         self.image = self.die_left_anim
+        #     else:
+        #         self.image = self.die_right_anim
+        # else:
+        #     if self.direction == 'left':
+        #         self.image = self.hit_left_anim
+        #     else:
+        #         self.image = self.hit_right_anim
+        (x, y) = (self.rect.center)
+        hitpoint = HitPoint(hurt ,(x+25,y+60), False)
+        self.parent.add(hitpoint, z=3)
         
-            # Patrol
-        if self.target.status=='patrol' or 'idle' and (not self.target.attacked):
-            if self.nextDecisionTime < 0:
-                self.m = random.randint(0,50)
-                if self.m > 0 and self.m <= 10 :
-                    self.M = 1
-                    self.target.image = self.target.move_right_anim
-                    self.nextDecisionTime = 3
-                elif self.m >= 40:
-                    self.M = -1
-                    self.target.image = self.target.move_left_anim
-                    self.nextDecisionTime = 3
-                else:
-                    self.M = 0
-                    self.target.image = self.target.stand_right_anim
-                    self.nextDecisionTime = 3
-            # Idle
-        elif self.target.status == 'idle' and (not self.target.attacked)and (not self.target.attacked):
-            self.M = 0
-        elif self.target.status == 'pursuit':
-            self.M *= self.target.dir_to_player 
-        elif self.target.attacked:
-            self.M = 0
-        print(self.M, self.target.status,'attacked?', self.target.attacked)
 
-        vx = self.move_speed * self.M
-        vy += self.gravity * dt
-        dx = vx * dt
-        dy = vy * dt
-        last_rect = self.target.rect
-        new_rect = last_rect.copy()
-        new_rect.x += dx
-        new_rect.y += dy 
-        self.target.velocity = mapcollider.collide_map(platform, last_rect, 
-                                                       new_rect, vx, vy)
-        if new_rect.left < 0 or new_rect.right > 1240:
-            new_rect.x -= dx
-        self.target.rect = new_rect
-        self.target.position = new_rect.center
+        self.one_time_trigger1 = False
+
+
+Player.register_event_type('on_ground')
 
         
 
@@ -276,10 +219,16 @@ class Monster(Sprite):
                                                 self.hit, 0.25)]
                                                )
         self.hit_right_anim = self.hit_left_anim.get_transform(flip_x=True)
+        self.die = []
+        for i in range(3):
+            image = pyglet.image.load('Source/OrangeMushroom/die1_%d.png' %i)
+            self.die.append(pyglet.image.AnimationFrame(image, 0.3))
+        self.die_left_anim = pyglet.image.Animation(self.die)
+        self.die_right_anim = self.die_left_anim.get_transform(flip_x=True)
 
         self.image = self.move_left_anim
         self.rect = cocos.rect.Rect(0,0,60,55)
-        self.rect.set_position((320,400))
+        self.rect.set_position((random.randint(0,1240),300))
         self.position = self.rect.center
         self.velocity = (0,0)
         self.direction = 'left'
@@ -296,19 +245,46 @@ class Monster(Sprite):
         self.move_speed = 50
         self.gravity = -800
         self.alert = False
+        # Used for pursuing target
         self.one_time_trigger = False
+        # Used for being attacked
+        self.one_time_trigger1 = True
+        # 
+        self.one_time_trigger2 = True
+        self.one_time_trigger3 = True
 
-        self.hp = 500
+        self.hp = 300
+        self.strength = 10
+        self.dead = False
+        self.active = False
+        self.do(FadeIn(3))
 
-    def under_attack(self):
-        self.attacked = True
-        self.alert = True
-        self.status = 'attacked'
-        self.hp -= 100
-        if self.direction == 'left':
-            self.image = self.hit_left_anim
-        else:
-            self.image = self.hit_right_anim
+    def under_attack(self, diff):
+        if self.one_time_trigger1:
+            print(True, 'hit')
+            self.attacked = True
+            self.alert = True
+            self.status = 'attacked'
+            hurt = int(diff*random.uniform(0.75,1.2))
+            self.hp -= hurt
+            if self.hp <= 0:
+                if self.direction == 'left':
+                    self.image = self.die_left_anim
+                else:
+                    self.image = self.die_right_anim
+            else:
+                if self.direction == 'left':
+                    self.image = self.hit_left_anim
+                else:
+                    self.image = self.hit_right_anim
+            (x, y) = (self.rect.center)
+            hitpoint = HitPoint(hurt ,(x+25,y+60), True)
+            self.parent.add(hitpoint, z=3)
+            
+
+            self.one_time_trigger1 = False
+
+        
 
     def update(self, dt):
         self.on_ground = True
@@ -318,27 +294,31 @@ class Monster(Sprite):
         vx, vy = self.velocity
         self.N = 1
         #print(self.nextDecisionTime)
+
+
         # AI decision:
         
             # Patrol
         if self.status=='patrol'  and (not self.attacked):
             if self.nextDecisionTime < 0:
-                self.m = random.randint(0,50)
-                if self.m > 0 and self.m <= 10 :
+                self.m = random.randint(0,100)
+                t = random.uniform(1,5)
+                if self.m > 0 and self.m <= 25 :
                     self.M = 1
                     self.image = self.move_right_anim
-                    self.nextDecisionTime = 3
-                elif self.m >= 40:
+                    self.nextDecisionTime = t
+                elif self.m >= 75:
                     self.M = -1
                     self.image = self.move_left_anim
-                    self.nextDecisionTime = 3
+                    self.nextDecisionTime = t
                 else:
                     self.M = 0
                     self.image = self.stand_right_anim
-                    self.nextDecisionTime = 3
+                    self.nextDecisionTime = t
             # Idle
-        elif self.status == 'idle' and (not self.attacked):
+        elif self.status == 'idle':
             self.M = 0
+
         elif self.status == 'pursuit':
             self.M = self.dir_to_player 
             if self.one_time_trigger or (self.direction=='left' 
@@ -371,7 +351,6 @@ class Monster(Sprite):
             new_rect.x -= dx
         self.rect = new_rect
         self.position = new_rect.center
-
     def on_animation_end(self):
         if self.attacked:
             if self.direction == 'left':
@@ -381,16 +360,45 @@ class Monster(Sprite):
             #self.status = 'idle'
             self.attacked = False
             self.one_time_trigger = True
+            self.one_time_trigger1 = True
+            if self.hp <= 0:
+                self.dead = True
+
+class HitPoint(cocos.batch.BatchableNode):
+    """docstring for HitPoint"""
+    def __init__(self, num, pos, is_player):
+        super(HitPoint, self).__init__()
+        self.Red = []
+        self.Violet = []
+        self.hitNum = []
+        for i in range(10):
+            image = pyglet.image.load('Source/number/NoRed1_%d.png' %i)
+            self.Red.append(image)
+        for i in range(10):
+            image = pyglet.image.load('Source/number/NoRed1_%d.png' %i)
+            self.Red.append(image)
+        x, y = pos
+
+        while num > 0:
+            n = num%10
+            if is_player == True:
+                digit = Sprite(self.Red[n])
+            else:
+                digit = Sprite(self.Violet[n])
+            digit.position = (x, y)
+
+            self.add(digit)
+            digit.do((MoveBy((0, 25), duration = 1) | FadeOut(1)) + 
+                     CallFunc(self.kill))
+            x -= 37
+            num = num // 10
 
 
+    # def draw(self):
+    #     for i in self.hitNum:
+    #         i.blit(100,100, 100)
 
-    # def on_animation_end(self):
-    #     if self.state != 'attacked' and self.direction == 'left':
-    #         self.image = self.stand_left_anim
-    #         self.state = 'still'
-    #     elif self.state != 'attacked' and self.direction == 'right':
-    #         self.image = self.stand_right_anim
-    #         self.state = 'still'
+        
 
 
 class Level1(ScrollableLayer):
@@ -424,13 +432,18 @@ class GameLayer(ScrollableLayer):
     is_event_handler = True
     def __init__(self):
         super(GameLayer, self).__init__()
-        self.monster_list = []
-        for n in range(10):
-            self.monster_list.append(Monster())
-        for monster in self.monster_list:
-            self.add(monster)
+        self.monster_batch = cocos.batch.BatchNode()
+        self.add(self.monster_batch)
+        for n in range(20):
+            self.monster_batch.add(Monster())
         self.player = Player()
         self.add(self.player)
+        self.L = Meteor()
+        self.L.size = 45.0
+        self.L.speed = 10
+        self.L.tangential_accel = 30
+        self.L.gravity = Point2(0.00, 0.00)
+        self.add(self.L)
         #self.player.do(PlayerAction())
         #self.monster_action = MonsterAction()
         #self.monster.do(self.monster_action)
@@ -441,38 +454,45 @@ class GameLayer(ScrollableLayer):
         else:
             return True
     def distance(self, A, B):
-        return math.sqrt((A.rect.center[0] - B.rect.center[0])**2 + 
-                         (A.rect.center[1] - B.rect.center[1])**2)
+        distance = A.rect.center[0] - B.rect.center[0]
+        if distance < 0:
+            distance *= -1
+        return distance
+                         
     def update(self, dt):
         self.player.update(dt)
-        for monster in self.monster_list:
-            monster.update(dt)
-            if self.collision_detect(self.player.attack_rect, 
-                                     monster.rect) and self.player.attacking:
-                if self.player._frame_index == 3 and self.player.one_time_trigger1:
-                    print(True, 'hit')
-                    monster.under_attack()
-                    self.player.one_time_trigger1 = False
-                elif self.player._frame_index == 7 and self.player.one_time_trigger2:
-                    print(True, 'hit')
-                    monster.under_attack()
-                    self.player.one_time_trigger2 = False
-                elif self.player._frame_index == 15 and self.player.one_time_trigger3:
-                    print(True, 'hit')
-                    monster.under_attack()
-                    self.player.one_time_trigger3 = False
+        self.L.position = self.player.position
+        for (z, monster) in self.monster_batch.children:
+            if isinstance(monster, Monster):
+                if monster.dead:
+                    monster.kill()
+                monster.update(dt)   
+                if self.collision_detect(self.player.attack_rect, 
+                                         monster.rect) and self.player.attacking:
+                    strength_diff = self.player.strength - monster.strength
+                    if self.player._frame_index == 3:
+                        monster.under_attack(strength_diff)
+                    elif self.player._frame_index == 7:
+                        monster.under_attack(strength_diff)
+                    elif self.player._frame_index == 15:
+                        monster.under_attack(strength_diff)
+                if monster.alert:
 
-            if monster.alert:
-                if self.distance(self.player, monster) < 500:    
-                    n = int(self.player.rect.center[0] > monster.rect.center[0])
-                    if n == 0:
-                        n = -1
-                    elif n == 1:
-                        n = 1
-                    monster.dir_to_player = n
-                    monster.status = 'pursuit'
-                else:
-                    monster.status = 'patrol'
+                    distance = self.distance(self.player, monster)
+                    if distance < 500 and distance > 30:    
+                        n = int(self.player.rect.center[0] > monster.rect.center[0])
+                        if n == 0:
+                            n = -1
+                        elif n == 1:
+                            n = 1
+                        monster.dir_to_player = n
+                        monster.status = 'pursuit'
+                    # elif self.distance(self.player, monster) < 30:
+                    #     monster.status = 'idle'
+                    # elif distance <= 30:
+                    #     monster.status = 'idle'
+                    else:
+                        monster.status = 'patrol'
 
         #print(self.monster.status)
 
@@ -511,37 +531,17 @@ if __name__ == "__main__":
         if symbol_string(key) == "EXIT":
             pyglet.app.exit()
         if symbol_string(key) == 'RIGHT':
-            gamelayer.player.direction = 'right'
-            gamelayer.player.attacking = False
-            gamelayer.player.attack_reset()
-            gamelayer.player.image = gamelayer.player.move_right_anim
-            gamelayer.player.image_anchor = (gamelayer.player.stand[0].image.width/2, 
-                                             gamelayer.player.stand[0].image.height/2)
+            gamelayer.player.walk_right()
         if symbol_string(key) == 'LEFT':
-            gamelayer.player.direction = 'left'
-            gamelayer.player.attacking = False
-            gamelayer.player.attack_reset()
-            gamelayer.player.image = gamelayer.player.move_left_anim
-            gamelayer.player.image_anchor = (gamelayer.player.stand[0].image.width/2, 
-                                   gamelayer.player.stand[0].image.height/2)
+            gamelayer.player.walk_left()
         if symbol_string(key) == 'S':
-            gamelayer.player.attacking = False
-            if gamelayer.player.direction == 'left':
-                gamelayer.player.image = gamelayer.player.jump_left_anim
-            elif gamelayer.player.direction == 'right':
-                gamelayer.player.image = gamelayer.player.jump_right_anim
+            gamelayer.player.jump()
         if symbol_string(key) == 'A':
-            if gamelayer.player.attacking == False:
-                gamelayer.player.attacking = True
-                if gamelayer.player.direction == 'left':
-                    gamelayer.player.image = gamelayer.player.slash_left_anim
-                    gamelayer.player.image_anchor = (400,156)
-                else:
-                    gamelayer.player.image = gamelayer.player.slash_right_anim
-                    gamelayer.player.image_anchor = (150,158)
+            gamelayer.player.attack()
      
         if symbol_string(key) == 'R':
             gamelayer.player.rect.set_center((300,400))
+
                 # player.rect.right = 
                 #player.image_anchor = player.position
     # Update
